@@ -12,7 +12,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 
 import javax.swing.JFrame;
 
@@ -30,6 +29,10 @@ import de.erichseifert.gral.util.Insets2D;
 public class LinePlotTest extends JFrame {
 	private static final long serialVersionUID = 1L;
 	private static ArrayList<Person> databaseList;
+
+	public enum ix {
+		L1, L2, LInfinity;
+	}
 
 	@SuppressWarnings("unchecked")
 	public LinePlotTest() {
@@ -62,67 +65,113 @@ public class LinePlotTest extends JFrame {
 	}
 
 	private void calculateDistance() {
-		ArrayList<Model> l1 = new ArrayList<Model>();
-		ArrayList<Model> l2 = new ArrayList<Model>();
-		ArrayList<Model> lInfinity = new ArrayList<Model>();
+
+		ArrayList<Model> calculatedNeighbours = new ArrayList<Model>();
 
 		for (int i = 0; i < 100; i++) {
+			ArrayList<Distance> l1 = new ArrayList<Distance>();
+			ArrayList<Distance> l2 = new ArrayList<Distance>();
+			ArrayList<Distance> lInfinity = new ArrayList<Distance>();
 			for (int i2 = 100; i2 < databaseList.size(); i2++) {
 
-				l1.add(new Model(KNND1(databaseList.get(i),
-						databaseList.get(i2)), i, i2));
-				l2.add(new Model(KNND2(databaseList.get(i),
-						databaseList.get(i2)), i, i2));
-				lInfinity.add(new Model(DInfnity(databaseList.get(i),
-						databaseList.get(i2)), i, i2));
+				l1.add(new Distance(KNND1(databaseList.get(i),
+						databaseList.get(i2)), databaseList.get(i2)));
+				l2.add(new Distance(KNND2(databaseList.get(i),
+						databaseList.get(i2)), databaseList.get(i2)));
+				lInfinity.add(new Distance(DInfnity(databaseList.get(i),
+						databaseList.get(i2)), databaseList.get(i2)));
 			}
+			calculatedNeighbours.add(new Model(databaseList.get(i), l1, l2,
+					lInfinity));
 		}
-		
-		System.out.println("l = 1");
-		calculateErrorRate(l1);
-		System.out.println("\nl = 2");
-		calculateErrorRate(l2);
-		System.out.println("\nl = Infinity");
-		calculateErrorRate(lInfinity);
+		System.out.println("\nl1");
+		calculateErrorRate(calculatedNeighbours, ix.L1);
+		System.out.println("\nl2");
+		calculateErrorRate(calculatedNeighbours, ix.L2);
+		System.out.println("\nlInfinity");
+		calculateErrorRate(calculatedNeighbours, ix.LInfinity);
 	}
 
-	private void calculateErrorRate(ArrayList<Model> l) {
+	private void calculateErrorRate(ArrayList<Model> calculatedNeighbours,
+			ix type) {
 
-		Comparator<Model> cmp = new Comparator<Model>() {
+		int k[] = {1, 3, 5, 9, 15, 31};
+		HashMap<Integer, Integer> errorRate = new HashMap<Integer, Integer>();
+
+		for (int i2 = 0; i2 < k.length; i2++) {
+			int right = 0;
+			int wrong = 0;
+			for (int i = 0; i < 100; i++) {
+				switch (type) {
+					case L1 :
+						if (isCorrect(calculatedNeighbours.get(i).getPerson(),
+								calculatedNeighbours.get(i).getL1(), k[i2])) {
+							right++;
+						} else {
+							wrong++;
+						}
+						break;
+					case L2 :
+						if (isCorrect(calculatedNeighbours.get(i).getPerson(),
+								calculatedNeighbours.get(i).getL2(), k[i2])) {
+							right++;
+						} else {
+							wrong++;
+						}
+						break;
+					case LInfinity :
+						if (isCorrect(calculatedNeighbours.get(i).getPerson(),
+								calculatedNeighbours.get(i).getlInfinity(),
+								k[i2])) {
+							right++;
+						} else {
+							wrong++;
+						}
+						break;
+				}
+				errorRate.put(k[i2], (100 / (right + wrong) * wrong));
+			}
+		}
+
+		Iterator<Integer> keySetIterator = errorRate.keySet().iterator();
+
+		while (keySetIterator.hasNext()) {
+			Integer key = keySetIterator.next();
+			System.out.println("k: " + key + " value: " + errorRate.get(key));
+		}
+	}
+
+	private boolean isCorrect(Person person, ArrayList<Distance> lX, int k) {
+
+		Comparator<Distance> cmp = new Comparator<Distance>() {
 			@Override
-			public int compare(Model o1, Model o2) {
-				return o1.getValue().compareTo(o2.getValue());
+			public int compare(Distance o1, Distance o2) {
+				return o1.getDistance().compareTo(o2.getDistance());
 			}
 		};
-		int k[] = { 1, 3, 5, 9, 15, 31 };
-		int right = 0;
-		int wrong = 0;
+		int class0 = 0;
+		int class1 = 0;
 
-		Collections.sort(l, cmp);
+		Collections.sort(lX, cmp);
 
-		HashMap<Integer, Double> errorRate = new HashMap<Integer, Double>();
-		
-		for (int i = 0; i < k.length; i++) {
-			for (int i2 = 0; i2 < k[i]; i2++) {
-				if (databaseList.get(l.get(i2).getIndexDatabase())
-						.getKlassifikation() == databaseList.get(
-						l.get(i2).getIndexTestdata()).getKlassifikation()) {
-					right++;
-				}
-				else
-				{
-					wrong++;
-				}
+		for (int i = 0; i < k; i++) {
+			if (lX.get(i).getTestPerson().getKlassifikation() == 0) {
+				class0++;
+			} else {
+				class1++;
 			}
-			errorRate.put(k[i], (right+wrong)/100.0*wrong);
 		}
-		
-		Iterator<Integer> keySetIterator = errorRate.keySet().iterator();
-		
-		while(keySetIterator.hasNext()){
-		  Integer key = keySetIterator.next();
-		  System.out.println("k: " + key + " value: " + errorRate.get(key));
+
+		if (class0 > class1) {
+			if (person.getKlassifikation() == 0) {
+				return true;
+			}
+		} else {
+			if (person.getKlassifikation() == 1) {
+				return true;
+			}
 		}
+		return false;
 	}
 
 	private double KNND1(Person databaseModel, Person testDataModel) {
@@ -145,11 +194,11 @@ public class LinePlotTest extends JFrame {
 
 	private double DInfnity(Person databaseModel, Person testDataModel) {
 
-		double d = ((databaseModel.getGewicht() - testDataModel.getGewicht()) * (databaseModel
-				.getGewicht() - testDataModel.getGewicht()))
-				+ ((databaseModel.getGroesse() - testDataModel.getGroesse()) * (databaseModel
-						.getGroesse() - testDataModel.getGroesse()));
-		return Math.pow(d, 1.0 / 3.0);
+		return Math.max(
+				Math.abs(databaseModel.getGewicht()
+						- testDataModel.getGewicht()),
+				Math.abs(databaseModel.getGroesse()
+						- testDataModel.getGroesse()));
 	}
 
 	private void nearestNeighbour(DataTable nnDataTable) {

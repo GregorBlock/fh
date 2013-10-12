@@ -1,44 +1,35 @@
 package aufgabe1;
 
+import java.util.ArrayList;
+
 public class Model {
 
-	private Double value;
-	private int indexDatabase;
-	private int indexTestdata;
-
-	public Model(Double value, int indexDatabase, int indexTestdata) {
-		this.value = value;
-		this.indexDatabase = indexDatabase;
-		this.indexTestdata = indexTestdata;
+	private Person person;
+	private ArrayList<Distance> l1;
+	private ArrayList<Distance> l2;
+	private ArrayList<Distance> lInfinity;
+	
+	public Model(Person person, ArrayList<Distance> l1, ArrayList<Distance> l2,
+			ArrayList<Distance> lInfinity) {
+		this.l1 = l1;
+		this.l2 = l2;
+		this.lInfinity = lInfinity;
+		this.person = person;
 	}
 
-	public int getIndexDatabase() {
-		return indexDatabase;
+	public Person getPerson() {
+		return person;
 	}
 
-	public void setIndexDatabase(int indexDatabase) {
-		this.indexDatabase = indexDatabase;
+	public ArrayList<Distance> getL1() {
+		return l1;
 	}
 
-	public int getIndexTestdata() {
-		return indexTestdata;
+	public ArrayList<Distance> getL2() {
+		return l2;
 	}
 
-	public void setIndexTestdata(int indexTestdata) {
-		this.indexTestdata = indexTestdata;
+	public ArrayList<Distance> getlInfinity() {
+		return lInfinity;
 	}
-
-	public Double getValue() {
-		return value;
-	}
-
-	public void setValue(Double value) {
-		this.value = value;
-	}
-
-	@Override
-	public String toString() {
-		return "Value: " + value + " Index: " + indexDatabase;
-	}
-
 }
