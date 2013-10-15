@@ -48,13 +48,17 @@ public class LinePlotTest extends JFrame {
 			e1.printStackTrace();
 		}
 
+		// Aufgabe 1.1
 		createDatabase(databaseTable, testDataTable);
 		wirte(fileWriter, databaseList);
 
+		// Aufgabe 2.1
 		nearestNeighbour(nnDataTable);
 
+		// Aufgabe 2.2
 		calculateDistance();
 
+		// Aufgabe 1.2
 		XYPlot plot = stylePlot(databaseTable, testDataTable, nnDataTable);
 
 		// Display on screen
@@ -65,23 +69,27 @@ public class LinePlotTest extends JFrame {
 	}
 
 	private void calculateDistance() {
-
 		ArrayList<Model> calculatedNeighbours = new ArrayList<Model>();
+		Person personDatabase;
+		Person personTestbase;
 
 		for (int i = 0; i < 100; i++) {
 			ArrayList<Distance> l1 = new ArrayList<Distance>();
 			ArrayList<Distance> l2 = new ArrayList<Distance>();
 			ArrayList<Distance> lInfinity = new ArrayList<Distance>();
-			for (int i2 = 100; i2 < databaseList.size(); i2++) {
+			personDatabase = databaseList.get(i);
 
-				l1.add(new Distance(KNND1(databaseList.get(i),
-						databaseList.get(i2)), databaseList.get(i2)));
-				l2.add(new Distance(KNND2(databaseList.get(i),
-						databaseList.get(i2)), databaseList.get(i2)));
-				lInfinity.add(new Distance(DInfnity(databaseList.get(i),
-						databaseList.get(i2)), databaseList.get(i2)));
+			for (int i2 = 100; i2 < databaseList.size(); i2++) {
+				personTestbase = databaseList.get(i2);
+
+				l1.add(new Distance(KNND1(personDatabase, personTestbase),
+						personTestbase));
+				l2.add(new Distance(KNND2(personDatabase, personTestbase),
+						personTestbase));
+				lInfinity.add(new Distance(DInfnity(personDatabase,
+						personTestbase), personTestbase));
 			}
-			calculatedNeighbours.add(new Model(databaseList.get(i), l1, l2,
+			calculatedNeighbours.add(new Model(personDatabase, l1, l2,
 					lInfinity));
 		}
 		System.out.println("\nl1");
@@ -129,8 +137,9 @@ public class LinePlotTest extends JFrame {
 						}
 						break;
 				}
-				errorRate.put(k[i2], (100 / (right + wrong) * wrong));
 			}
+//			System.out.println("istegal: "+(right + wrong));
+			errorRate.put(k[i2], (100 / (right + wrong) * wrong));
 		}
 
 		Iterator<Integer> keySetIterator = errorRate.keySet().iterator();
@@ -153,7 +162,7 @@ public class LinePlotTest extends JFrame {
 		int class1 = 0;
 
 		Collections.sort(lX, cmp);
-
+		
 		for (int i = 0; i < k; i++) {
 			if (lX.get(i).getTestPerson().getKlassifikation() == 0) {
 				class0++;
@@ -183,12 +192,13 @@ public class LinePlotTest extends JFrame {
 	}
 
 	private double KNND2(Person databaseModel, Person testDataModel) {
-		return Math
-				.sqrt(((databaseModel.getGewicht() - testDataModel.getGewicht()) * (databaseModel
-						.getGewicht() - testDataModel.getGewicht()))
-						+ ((databaseModel.getGroesse() - testDataModel
-								.getGroesse()) * (databaseModel.getGroesse() - testDataModel
-								.getGroesse())));
+
+		double d1 = (databaseModel.getGewicht() - testDataModel.getGewicht())
+				* (databaseModel.getGewicht() - testDataModel.getGewicht());
+
+		double d2 = (databaseModel.getGroesse() - testDataModel.getGroesse())
+				* (databaseModel.getGroesse() - testDataModel.getGroesse());
+		return Math.sqrt(d1 + d2);
 
 	}
 
