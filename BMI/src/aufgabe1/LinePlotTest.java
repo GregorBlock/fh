@@ -76,9 +76,12 @@ public class LinePlotTest extends JFrame {
 		InteractivePanel interactivePanel = new InteractivePanel(plot);
 		getContentPane().add(interactivePanel, BorderLayout.CENTER);
 
-		System.out.println("\nAufgabe 2.4\n===========");
+		System.out.println("\nAufgabe 2.3\n===========");
 		createDatabase(databaseTable2, testDataTable2, Metric.m, Mode.normal,
 				databaseList2_4);
+		calculateDistance(databaseList2_4, Mode.normal);
+
+		System.out.println("\nAufgabe 2.4\n===========");
 		ArrayList<Person> normalizedDatabase = normalization(databaseList2_4);
 		calculateDistance(normalizedDatabase, Mode.normal);
 		nearestNeighbour(nnDataTable2, normalizedDatabase);
