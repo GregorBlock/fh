@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Random;
 
 import javax.swing.JFrame;
 
@@ -28,19 +29,30 @@ import de.erichseifert.gral.util.Insets2D;
 
 public class LinePlotTest extends JFrame {
 	private static final long serialVersionUID = 1L;
-	private static ArrayList<Person> databaseList;
 
 	public enum ix {
 		L1, L2, LInfinity;
 	}
 
+	public enum Metric {
+		cm, m;
+	}
+	public enum Mode {
+		randomNumber, noSize, normal;
+	}
+
 	@SuppressWarnings("unchecked")
 	public LinePlotTest() {
 		FileWriter fileWriter = null;
-		databaseList = new ArrayList<Person>();
+		ArrayList<Person> databaseList = new ArrayList<Person>();;
+		ArrayList<Person> databaseList2_4 = new ArrayList<Person>();
+		ArrayList<Person> databaseList2_6 = new ArrayList<Person>();
 		DataTable databaseTable = new DataTable(Double.class, Double.class);
 		DataTable testDataTable = new DataTable(Double.class, Double.class);
 		DataTable nnDataTable = new DataTable(Double.class, Double.class);
+		DataTable databaseTable2 = new DataTable(Double.class, Double.class);
+		DataTable testDataTable2 = new DataTable(Double.class, Double.class);
+		DataTable nnDataTable2 = new DataTable(Double.class, Double.class);
 
 		try {
 			fileWriter = new FileWriter("Bla");
@@ -49,49 +61,124 @@ public class LinePlotTest extends JFrame {
 		}
 
 		// Aufgabe 1.1
-		createDatabase(databaseTable, testDataTable);
+		createDatabase(databaseTable, testDataTable, Metric.cm, Mode.normal,
+				databaseList);
+
 		wirte(fileWriter, databaseList);
 
 		// Aufgabe 2.1
-		nearestNeighbour(nnDataTable);
+		nearestNeighbour(nnDataTable, databaseList);
 
-		// Aufgabe 2.2
-		calculateDistance();
-
+		System.out.println("Aufgabe 2.2\n===========");
+		calculateDistance(databaseList, Mode.normal);
 		// Aufgabe 1.2
 		XYPlot plot = stylePlot(databaseTable, testDataTable, nnDataTable);
+		InteractivePanel interactivePanel = new InteractivePanel(plot);
+		getContentPane().add(interactivePanel, BorderLayout.CENTER);
+
+		System.out.println("\nAufgabe 2.4\n===========");
+		createDatabase(databaseTable2, testDataTable2, Metric.m, Mode.normal,
+				databaseList2_4);
+		ArrayList<Person> normalizedDatabase = normalization(databaseList2_4);
+		calculateDistance(normalizedDatabase, Mode.normal);
+		nearestNeighbour(nnDataTable2, normalizedDatabase);
+		// XYPlot plot2 = stylePlot2(databaseTable2, testDataTable2);
+		// InteractivePanel interactivePanel2 = new InteractivePanel(plot2);
+		// getContentPane().add(interactivePanel2, BorderLayout.CENTER);
+
+		System.out.println("\nAufgabe 2.5\n===========");
+		ArrayList<Person> averageDatabase = calculateAverage(databaseList);
+		calculateDistance(averageDatabase, Mode.noSize);
+
+		System.out.println("\nAufgabe 2.6\n===========");
+		createDatabase(databaseTable, testDataTable, Metric.cm,
+				Mode.randomNumber, databaseList2_6);
+		calculateDistance(databaseList2_6, Mode.randomNumber);
 
 		// Display on screen
-		getContentPane().add(new InteractivePanel(plot), BorderLayout.CENTER);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setMinimumSize(getContentPane().getMinimumSize());
 		setSize(504, 327);
 	}
 
-	private void calculateDistance() {
-		ArrayList<Model> calculatedNeighbours = new ArrayList<Model>();
-		Person personDatabase;
-		Person personTestbase;
+	private ArrayList<Person> calculateAverage(ArrayList<Person> databaseList) {
+		ArrayList<Person> avarageDatabase = new ArrayList<Person>();
 
+		double averageGewicht = 0;
+		double averageGroesse = 0;
+
+		// arithmetische Mittel
 		for (int i = 0; i < 100; i++) {
+			averageGewicht += databaseList.get(i).getGewicht();
+			averageGroesse += databaseList.get(i).getGroesse();
+		}
+
+		averageGewicht /= 100;
+		averageGroesse /= 100;
+
+		for (int i = 0; i < 200; i++) {
+			Person person = databaseList.get(i);
+
+			avarageDatabase.add(new Person(
+					person.getGroesse() - averageGroesse, person.getGewicht()
+							- averageGewicht, person.getKlassifikation()));
+		}
+		return avarageDatabase;
+	}
+
+	private ArrayList<Person> normalization(ArrayList<Person> databaseList) {
+		ArrayList<Person> normalizedDatabase = new ArrayList<Person>();
+		double varianceGewicht = 0;
+		double varianceGroesse = 0;
+
+		ArrayList<Person> avarageDatabase = calculateAverage(databaseList);
+
+		// Standardabweichung
+		for (int i = 0; i < 100; i++) {
+			varianceGewicht += avarageDatabase.get(i).getGewicht()
+					* avarageDatabase.get(i).getGewicht();
+			varianceGroesse += avarageDatabase.get(i).getGroesse()
+					* avarageDatabase.get(i).getGroesse();
+		}
+
+		varianceGewicht = Math.sqrt(varianceGewicht / 100);
+		varianceGroesse = Math.sqrt(varianceGroesse / 100);
+
+		for (int i = 0; i < 200; i++) {
+			Person person = avarageDatabase.get(i);
+
+			normalizedDatabase.add(new Person(person.getGroesse()
+					/ varianceGroesse, person.getGewicht() / varianceGewicht,
+					person.getKlassifikation()));
+		}
+		return normalizedDatabase;
+
+	}
+	private void calculateDistance(ArrayList<Person> database, Mode mode) {
+		ArrayList<Model> calculatedNeighbours = new ArrayList<Model>();
+
+		for (int i = 100; i < 200; i++) {
 			ArrayList<Distance> l1 = new ArrayList<Distance>();
 			ArrayList<Distance> l2 = new ArrayList<Distance>();
 			ArrayList<Distance> lInfinity = new ArrayList<Distance>();
-			personDatabase = databaseList.get(i);
+			Person personDatabase = database.get(i);
 
-			for (int i2 = 100; i2 < databaseList.size(); i2++) {
-				personTestbase = databaseList.get(i2);
+			for (int i2 = 0; i2 < 100; i2++) {
+				Person personTestbase = database.get(i2);
 
-				l1.add(new Distance(KNND1(personDatabase, personTestbase),
+				l1.add(new Distance(
+						KNND1(personDatabase, personTestbase, mode),
 						personTestbase));
-				l2.add(new Distance(KNND2(personDatabase, personTestbase),
+				l2.add(new Distance(
+						KNND2(personDatabase, personTestbase, mode),
 						personTestbase));
 				lInfinity.add(new Distance(DInfnity(personDatabase,
-						personTestbase), personTestbase));
+						personTestbase, mode), personTestbase));
 			}
 			calculatedNeighbours.add(new Model(personDatabase, l1, l2,
 					lInfinity));
 		}
+
 		System.out.println("\nl1");
 		calculateErrorRate(calculatedNeighbours, ix.L1);
 		System.out.println("\nl2");
@@ -138,7 +225,6 @@ public class LinePlotTest extends JFrame {
 						break;
 				}
 			}
-//			System.out.println("istegal: "+(right + wrong));
 			errorRate.put(k[i2], (100 / (right + wrong) * wrong));
 		}
 
@@ -162,7 +248,6 @@ public class LinePlotTest extends JFrame {
 		int class1 = 0;
 
 		Collections.sort(lX, cmp);
-		
 		for (int i = 0; i < k; i++) {
 			if (lX.get(i).getTestPerson().getKlassifikation() == 0) {
 				class0++;
@@ -170,7 +255,6 @@ public class LinePlotTest extends JFrame {
 				class1++;
 			}
 		}
-
 		if (class0 > class1) {
 			if (person.getKlassifikation() == 0) {
 				return true;
@@ -183,35 +267,81 @@ public class LinePlotTest extends JFrame {
 		return false;
 	}
 
-	private double KNND1(Person databaseModel, Person testDataModel) {
+	private double KNND1(Person databaseModel, Person testDataModel, Mode mode) {
 
+		if (mode.equals(Mode.normal)) {
+			return Math.abs(databaseModel.getGewicht()
+					- testDataModel.getGewicht())
+					+ Math.abs(databaseModel.getGroesse()
+							- testDataModel.getGroesse());
+		} else if (mode.equals(Mode.randomNumber)) {
+			return Math.abs(databaseModel.getGewicht()
+					- testDataModel.getGewicht())
+					+ Math.abs(databaseModel.getGroesse()
+							- testDataModel.getGroesse()
+							+ Math.abs(databaseModel.getRandomNumber()
+									- testDataModel.getRandomNumber()));
+		}
 		return Math
-				.abs(databaseModel.getGewicht() - testDataModel.getGewicht())
-				+ Math.abs(databaseModel.getGroesse()
-						- testDataModel.getGroesse());
-	}
-
-	private double KNND2(Person databaseModel, Person testDataModel) {
-
-		double d1 = (databaseModel.getGewicht() - testDataModel.getGewicht())
-				* (databaseModel.getGewicht() - testDataModel.getGewicht());
-
-		double d2 = (databaseModel.getGroesse() - testDataModel.getGroesse())
-				* (databaseModel.getGroesse() - testDataModel.getGroesse());
-		return Math.sqrt(d1 + d2);
+				.abs(databaseModel.getGewicht() - testDataModel.getGewicht());
 
 	}
 
-	private double DInfnity(Person databaseModel, Person testDataModel) {
+	private double KNND2(Person databaseModel, Person testDataModel, Mode mode) {
 
-		return Math.max(
-				Math.abs(databaseModel.getGewicht()
-						- testDataModel.getGewicht()),
-				Math.abs(databaseModel.getGroesse()
-						- testDataModel.getGroesse()));
+		if (mode.equals(Mode.normal)) {
+			double d1 = (databaseModel.getGewicht() - testDataModel
+					.getGewicht())
+					* (databaseModel.getGewicht() - testDataModel.getGewicht());
+
+			double d2 = (databaseModel.getGroesse() - testDataModel
+					.getGroesse())
+					* (databaseModel.getGroesse() - testDataModel.getGroesse());
+			return Math.sqrt(d1 + d2);
+		} else if (mode.equals(Mode.randomNumber)) {
+			double d1 = (databaseModel.getGewicht() - testDataModel
+					.getGewicht())
+					* (databaseModel.getGewicht() - testDataModel.getGewicht());
+
+			double d2 = (databaseModel.getGroesse() - testDataModel
+					.getGroesse())
+					* (databaseModel.getGroesse() - testDataModel.getGroesse());
+
+			double d3 = (databaseModel.getRandomNumber() - testDataModel
+					.getRandomNumber())
+					* (databaseModel.getRandomNumber() - testDataModel
+							.getRandomNumber());
+			return Math.sqrt(d1 + d2 + d3);
+		}
+		return Math.sqrt((databaseModel.getGewicht() - testDataModel
+				.getGewicht())
+				* (databaseModel.getGewicht() - testDataModel.getGewicht()));
 	}
 
-	private void nearestNeighbour(DataTable nnDataTable) {
+	private double DInfnity(Person databaseModel, Person testDataModel,
+			Mode mode) {
+		if (mode.equals(Mode.normal)) {
+			return Math.max(
+					Math.abs(databaseModel.getGewicht()
+							- testDataModel.getGewicht()),
+					Math.abs(databaseModel.getGroesse()
+							- testDataModel.getGroesse()));
+		} else if (mode.equals(Mode.randomNumber)) {
+			return Math.max(
+					Math.abs(databaseModel.getRandomNumber()
+							- testDataModel.getRandomNumber()),
+					Math.max(
+							Math.abs(databaseModel.getGewicht()
+									- testDataModel.getGewicht()),
+							Math.abs(databaseModel.getGroesse()
+									- testDataModel.getGroesse())));
+		}
+			return Math
+					.abs(databaseModel.getGewicht() - testDataModel.getGewicht());
+	}
+
+	private void nearestNeighbour(DataTable nnDataTable,
+			ArrayList<Person> databaseList) {
 		Person model;
 		Person paul = new Person(175, 89, -1);
 		Person temp = null;
@@ -241,7 +371,8 @@ public class LinePlotTest extends JFrame {
 		}
 	}
 
-	private void createDatabase(DataTable database, DataTable testData) {
+	private void createDatabase(DataTable database, DataTable testData,
+			Metric metric, Mode mode, ArrayList<Person> databaseList) {
 		Person model;
 		double groesse;
 		double gewicht;
@@ -254,8 +385,20 @@ public class LinePlotTest extends JFrame {
 			if (i % 19 == 0 && i != 0) {
 				klassifikation = 1 - klassifikation;
 			}
-
-			model = new Person(groesse, gewicht, klassifikation);
+			if (metric.equals(Metric.m)) {
+				groesse /= 100;
+			}
+			if (mode.equals(Mode.normal)) {
+				model = new Person(groesse, gewicht, klassifikation);
+			} else {
+				Random r = new Random();
+				int rangeMin = 1;
+				int rangeMax = 10000;
+				double randomNumeber = rangeMin + (rangeMax - rangeMin)
+						* r.nextDouble();
+				model = new Person(groesse, gewicht, randomNumeber,
+						klassifikation);
+			}
 			databaseList.add(model);
 			if (i < 100)
 				database.add(groesse, gewicht);
@@ -277,7 +420,7 @@ public class LinePlotTest extends JFrame {
 		double insetsTop = 20.0, insetsLeft = 60.0, insetsBottom = 60.0, insetsRight = 40.0;
 		plot.setInsets(new Insets2D.Double(insetsTop, insetsLeft, insetsBottom,
 				insetsRight));
-		plot.setSetting(BarPlot.TITLE, "Aufgabe 2");
+		plot.setSetting(BarPlot.TITLE, "Aufgabe 2.2");
 
 		// Style the plot area
 		plot.getPlotArea().setSetting(PlotArea.COLOR,
@@ -321,11 +464,10 @@ public class LinePlotTest extends JFrame {
 		return plot;
 	}
 
-	private void wirte(FileWriter fileWriter, ArrayList<Person> list2) {
+	private void wirte(FileWriter fileWriter, ArrayList<Person> database) {
 		try {
 			for (int i = 0; i < 200; i++)
-				fileWriter.write(i + " " + databaseList.get(i).toString()
-						+ "\n");
+				fileWriter.write(i + " " + database.get(i).toString() + "\n");
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
