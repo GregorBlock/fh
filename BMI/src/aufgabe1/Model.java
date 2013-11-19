@@ -2,6 +2,7 @@ package aufgabe1;
 
 import java.util.ArrayList;
 
+
 public class Model {
 
 	private Person person;

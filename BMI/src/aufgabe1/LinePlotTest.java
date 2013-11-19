@@ -85,9 +85,6 @@ public class LinePlotTest extends JFrame {
 		ArrayList<Person> normalizedDatabase = normalization(databaseList2_4);
 		calculateDistance(normalizedDatabase, Mode.normal);
 		nearestNeighbour(nnDataTable2, normalizedDatabase);
-		// XYPlot plot2 = stylePlot2(databaseTable2, testDataTable2);
-		// InteractivePanel interactivePanel2 = new InteractivePanel(plot2);
-		// getContentPane().add(interactivePanel2, BorderLayout.CENTER);
 
 		System.out.println("\nAufgabe 2.5\n===========");
 		ArrayList<Person> averageDatabase = calculateAverage(databaseList);
@@ -101,7 +98,7 @@ public class LinePlotTest extends JFrame {
 		// Display on screen
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setMinimumSize(getContentPane().getMinimumSize());
-		setSize(504, 327);
+		setSize(604, 427);
 	}
 
 	private ArrayList<Person> calculateAverage(ArrayList<Person> databaseList) {

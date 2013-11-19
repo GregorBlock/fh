@@ -1,5 +1,6 @@
 package aufgabe1;
 
+
 public class Distance {
 	private Double distance;
 	private Person testPerson;
