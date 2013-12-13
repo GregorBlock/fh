@@ -1,0 +1,2 @@
+cmdhistory=["(firstfouramicable [])" "(firstfouramicable)" "(firstfourperfect)" "(firstfouramicable)" "(amicable? 220 284)" "(firstfouramicable)" "(amicables 4)" "(amicables 1)" "(amicables 4)" "(amicables 10)" "(amicables 5)" "(amicables 7)" "(amicables 10)" "(take 10 primes)" "(take 2 primes)" "(goldbach-partition 15)" "(goldbach-partition 15)\#" "(goldbach-partition 15)" "(goldbach-partition 18)" "collatz-seq 23" "collatz-seq 1234" "collatz-seq-len 214" "(collatz-seq 1234)" "(collatz-seq 122)"]
+eclipse.preferences.version=1
